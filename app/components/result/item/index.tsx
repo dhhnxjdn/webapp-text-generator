@@ -15,7 +15,6 @@ import { updateFeedback } from '@/service'
 import Clipboard from '@/app/components/base/icons/line/clipboard'
 import RefreshCcw01 from '@/app/components/base/icons/line/refresh-ccw-01'
 import CodeEditor from '@/app/components/result/workflow/code-editor'
-import WorkflowProcessItem from '@/app/components/result/workflow/workflow-process'
 import { CodeLanguage } from '@/types/app'
 
 export type IGenerationItemProps = {
@@ -145,9 +144,6 @@ const GenerationItem: FC<IGenerationItemProps> = ({
             }
             <div className='flex'>
               <div className='grow w-0'>
-                {workflowProcessData && (
-                  <WorkflowProcessItem grayBg hideInfo data={workflowProcessData} expand={workflowProcessData.expand} />
-                )}
                 {isError && (
                   <div className='text-gray-400 text-sm'>{t('app.generation.batchFailed.outputPlaceholder')}</div>
                 )}

@@ -273,7 +273,6 @@ const Result: FC<IResultProps> = ({
   const renderTextGenerationRes = () => (
     <TextGenerationRes
       isWorkflow={isWorkflow}
-      workflowProcessData={workflowProcessData}
       className='mt-3'
       isError={isError}
       onRetry={handleSend}
@@ -298,7 +297,7 @@ const Result: FC<IResultProps> = ({
             </div>)
           : (
             <>
-              {(isNoData && !workflowProcessData)
+              {isNoData
                 ? <NoData />
                 : renderTextGenerationRes()
               }

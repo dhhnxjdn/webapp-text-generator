@@ -23,6 +23,12 @@ const ConfigSence: FC<IConfigSenceProps> = ({
 }) => {
   const { t } = useTranslation()
 
+  // 抖音分享文本示例 + 输入提示（仅针对链接类输入框）
+  const URL_INPUT_KEYS = ['douyin_urls']
+  const SAMPLE_TEXT = '5.10 复制打开抖音，看看【示例作品】https://v.douyin.com/iRNBho6u/'
+  const isUrlInput = (key: string) => URL_INPUT_KEYS.includes(key)
+  const placeholderFor = (key: string) => (isUrlInput(key) ? t('app.generation.inputPlaceholder') : '')
+
   const onClear = () => {
     const newInputs: Record<string, any> = {}
     promptConfig.prompt_variables.forEach((item) => {
@@ -62,8 +68,8 @@ const ConfigSence: FC<IConfigSenceProps> = ({
                 )}
                 {item.type === 'paragraph' && (
                   <textarea
-                    className="block w-full h-[104px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 sm:text-xs focus:ring-blue-500 focus:border-blue-500 "
-                    placeholder={`${item.name}${!item.required ? `(${t('app.common.optional')})` : ''}`}
+                    className="block w-full h-[136px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 sm:text-xs focus:ring-blue-500 focus:border-blue-500 "
+                    placeholder={placeholderFor(item.key) || `${item.name}${!item.required ? `(${t('app.common.optional')})` : ''}`}
                     value={inputs[item.key]}
                     onChange={(e) => { onInputsChange({ ...inputs, [item.key]: e.target.value }) }}
                   />
@@ -78,6 +84,15 @@ const ConfigSence: FC<IConfigSenceProps> = ({
                   />
                 )}
               </div>
+              {isUrlInput(item.key) && (
+                <button
+                  type="button"
+                  className='mt-2 text-xs text-primary-600 hover:underline'
+                  onClick={() => onInputsChange({ ...inputs, [item.key]: SAMPLE_TEXT })}
+                >
+                  {t('app.generation.fillSample')}
+                </button>
+              )}
             </div>
           ))}
 
