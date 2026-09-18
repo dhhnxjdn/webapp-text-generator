@@ -20,12 +20,13 @@ module.exports = {
           900: '#111928',
         },
         primary: {
-          50: '#EBF5FF',
-          100: '#E1EFFE',
-          200: '#C3DDFD',
-          300: '#A4CAFE',
-          600: '#1C64F2',
-          700: '#1A56DB',
+          50: '#FFF1F4',
+          100: '#FFE4EA',
+          200: '#FFC9D4',
+          300: '#FF97AC',
+          400: '#FE5B7B',
+          600: '#FE2C55',
+          700: '#D91F45',
         },
         blue: {
           500: '#E1EFFE',
@@ -61,6 +62,5 @@ module.exports = {
   },
   plugins: [
     require('@tailwindcss/typography'),
-    require('@tailwindcss/line-clamp'),
   ],
 }

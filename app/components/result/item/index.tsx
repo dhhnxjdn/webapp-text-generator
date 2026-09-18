@@ -14,10 +14,12 @@ import type { Feedbacktype, WorkflowProcess } from '@/types/app'
 import { updateFeedback } from '@/service'
 import Clipboard from '@/app/components/base/icons/line/clipboard'
 import RefreshCcw01 from '@/app/components/base/icons/line/refresh-ccw-01'
-import CodeEditor from '@/app/components/result/workflow/code-editor'
-import { CodeLanguage } from '@/types/app'
+import type { ResultMode } from '@/types/workflow'
+import StructuredResult from '@/app/components/result/structured-result'
 
 export type IGenerationItemProps = {
+  workflowSlug: string
+  resultMode: ResultMode
   isWorkflow?: boolean
   workflowProcessData?: WorkflowProcess
   className?: string
@@ -55,6 +57,8 @@ export const copyIcon = (
 )
 
 const GenerationItem: FC<IGenerationItemProps> = ({
+  workflowSlug,
+  resultMode,
   isWorkflow,
   workflowProcessData,
   className,
@@ -81,13 +85,15 @@ const GenerationItem: FC<IGenerationItemProps> = ({
   })
 
   const handleFeedback = async (childFeedback: Feedbacktype) => {
-    await updateFeedback({ url: `/messages/${childMessageId}/feedbacks`, body: { rating: childFeedback.rating } })
+    await updateFeedback({ slug: workflowSlug, url: `/messages/${childMessageId}/feedbacks`, body: { rating: childFeedback.rating } })
     setChildFeedback(childFeedback)
   }
 
   const [isQuerying, { setTrue: startQuerying, setFalse: stopQuerying }] = useBoolean(false)
 
   const childProps = {
+    workflowSlug,
+    resultMode,
     isInWebApp: true,
     content: completionRes,
     messageId: childMessageId,
@@ -150,15 +156,7 @@ const GenerationItem: FC<IGenerationItemProps> = ({
                 {!isError && (typeof content === 'string') && (
                   <Markdown content={content} />
                 )}
-                {!isError && (typeof content !== 'string') && (
-                  <CodeEditor
-                    readOnly
-                    title={<div />}
-                    language={CodeLanguage.json}
-                    value={content}
-                    isJSONStringifyBeauty
-                  />
-                )}
+                {!isError && (typeof content !== 'string') && <StructuredResult value={content} mode={resultMode} />}
               </div>
             </div>
 
@@ -236,7 +234,7 @@ const GenerationItem: FC<IGenerationItemProps> = ({
                   </>
                 )}
               </div>
-              <div className='text-xs text-gray-500'>{content?.length} {t('common.unit.char')}</div>
+              <div className='text-xs text-gray-500'>{typeof content === 'string' ? `${content.length} ${t('common.unit.char')}` : '已生成结构化结果'}</div>
             </div>
 
           </div>

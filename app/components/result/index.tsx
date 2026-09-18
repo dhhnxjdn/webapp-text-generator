@@ -13,8 +13,11 @@ import type { Feedbacktype, PromptConfig, VisionFile, VisionSettings, WorkflowPr
 import { NodeRunningStatus, TransferMethod, WorkflowRunningStatus } from '@/types/app'
 import Loading from '@/app/components/base/loading'
 import { sleep } from '@/utils'
+import type { ResultMode } from '@/types/workflow'
 
 export type IResultProps = {
+  workflowSlug: string
+  resultMode: ResultMode
   isWorkflow: boolean
   isCallBatchAPI: boolean
   isPC: boolean
@@ -33,6 +36,8 @@ export type IResultProps = {
 }
 
 const Result: FC<IResultProps> = ({
+  workflowSlug,
+  resultMode,
   isWorkflow,
   isCallBatchAPI,
   isPC,
@@ -79,7 +84,7 @@ const Result: FC<IResultProps> = ({
   })
 
   const handleFeedback = async (feedback: Feedbacktype) => {
-    await updateFeedback({ url: `/messages/${messageId}/feedbacks`, body: { rating: feedback.rating } })
+    await updateFeedback({ slug: workflowSlug, url: `/messages/${messageId}/feedbacks`, body: { rating: feedback.rating } })
     setFeedback(feedback)
   }
 
@@ -170,6 +175,7 @@ const Result: FC<IResultProps> = ({
 
     if (isWorkflow) {
       sendWorkflowMessage(
+        workflowSlug,
         data,
         {
           onWorkflowStarted: ({ workflow_run_id }) => {
@@ -233,7 +239,7 @@ const Result: FC<IResultProps> = ({
       )
     }
     else {
-      sendCompletionMessage(data, {
+      sendCompletionMessage(workflowSlug, data, {
         onData: (data: string, _isFirstMessage: boolean, { messageId }) => {
           tempMessageId = messageId
           res.push(data)
@@ -284,6 +290,8 @@ const Result: FC<IResultProps> = ({
       isMobile={isMobile}
       isLoading={isCallBatchAPI ? (!completionRes && isResponsing) : false}
       taskId={isCallBatchAPI ? ((taskId as number) < 10 ? `0${taskId}` : `${taskId}`) : undefined}
+      workflowSlug={workflowSlug}
+      resultMode={resultMode}
     />
   )
 

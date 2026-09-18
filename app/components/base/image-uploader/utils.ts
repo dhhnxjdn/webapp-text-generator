@@ -3,6 +3,7 @@
 import { upload } from '@/service/base'
 
 type ImageUploadParams = {
+  endpoint?: string
   file: File
   onProgressCallback: (progress: number) => void
   onSuccessCallback: (res: { id: string }) => void
@@ -11,6 +12,7 @@ type ImageUploadParams = {
 type ImageUpload = (v: ImageUploadParams) => void
 export const imageUpload: ImageUpload = ({
   file,
+  endpoint,
   onProgressCallback,
   onSuccessCallback,
   onErrorCallback,
@@ -28,7 +30,7 @@ export const imageUpload: ImageUpload = ({
     xhr: new XMLHttpRequest(),
     data: formData,
     onprogress: onProgress,
-  })
+  }, endpoint)
     .then((res: { id: string }) => {
       onSuccessCallback(res)
     })

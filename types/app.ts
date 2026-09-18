@@ -16,6 +16,10 @@ export type PromptVariable = {
   required?: boolean
   options?: string[]
   max_length?: number
+  placeholder?: string
+  hint?: string
+  fileTypes?: string[]
+  maxFiles?: number
 }
 
 export type PromptConfig = {

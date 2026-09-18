@@ -9,6 +9,7 @@ import { TransferMethod } from '@/types/app'
 import Toast from '@/app/components/base/toast'
 
 type UploaderProps = {
+  endpoint?: string
   children: (hovering: boolean) => JSX.Element
   onUpload: (imageFile: ImageFile) => void
   limit?: number
@@ -20,6 +21,7 @@ const Uploader: FC<UploaderProps> = ({
   onUpload,
   limit,
   disabled,
+  endpoint,
 }) => {
   const [hovering, setHovering] = useState(false)
   const { notify } = Toast
@@ -51,6 +53,7 @@ const Uploader: FC<UploaderProps> = ({
         }
         onUpload(imageFile)
         imageUpload({
+          endpoint,
           file: imageFile.file,
           onProgressCallback: (progress) => {
             onUpload({ ...imageFile, progress })

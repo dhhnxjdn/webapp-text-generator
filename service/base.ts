@@ -279,9 +279,9 @@ const baseFetch = (url: string, fetchOptions: any, { needAllResponseContent }: I
   ])
 }
 
-export const upload = (fetchOptions: any): Promise<any> => {
+export const upload = (fetchOptions: any, endpoint = 'file-upload'): Promise<any> => {
   const urlPrefix = API_PREFIX
-  const urlWithPrefix = `${urlPrefix}/file-upload`
+  const urlWithPrefix = `${urlPrefix}/${endpoint.replace(/^\//, '')}`
   const defaultOptions = {
     method: 'POST',
     url: `${urlWithPrefix}`,

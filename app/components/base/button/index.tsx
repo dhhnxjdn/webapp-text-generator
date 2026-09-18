@@ -8,7 +8,7 @@ export type IButtonProps = {
   disabled?: boolean
   loading?: boolean
   children: React.ReactNode
-  onClick?: MouseEventHandler<HTMLDivElement>
+  onClick?: MouseEventHandler<HTMLButtonElement>
 }
 
 const Button: FC<IButtonProps> = ({
@@ -22,7 +22,7 @@ const Button: FC<IButtonProps> = ({
   let style = 'cursor-pointer'
   switch (type) {
     case 'primary':
-      style = (disabled || loading) ? 'bg-primary-600/75 cursor-not-allowed text-white' : 'bg-primary-600 hover:bg-primary-600/75 hover:shadow-md cursor-pointer text-white hover:shadow-sm'
+      style = (disabled || loading) ? 'bg-[#17191e]/60 cursor-not-allowed text-white' : 'bg-[#17191e] hover:bg-black hover:shadow-md cursor-pointer text-white hover:shadow-sm'
       break
     default:
       style = disabled ? 'border-solid border border-gray-200 bg-gray-200 cursor-not-allowed text-gray-800' : 'border-solid border border-gray-200 cursor-pointer text-gray-500 hover:bg-white hover:shadow-sm hover:border-gray-300'
@@ -30,14 +30,16 @@ const Button: FC<IButtonProps> = ({
   }
 
   return (
-    <div
+    <button
+      type="button"
       className={`flex justify-center items-center content-center h-9 leading-5 rounded-lg px-4 py-2 text-base ${style} ${className && className}`}
       onClick={disabled ? undefined : onClick}
+      disabled={disabled || loading}
     >
       {children}
       {/* Spinner is hidden when loading is false */}
       <Spinner loading={loading} className='!text-white !h-3 !w-3 !border-2 !ml-1' />
-    </div>
+    </button>
   )
 }
 

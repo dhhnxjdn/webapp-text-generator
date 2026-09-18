@@ -9,8 +9,10 @@ import type { PromptConfig, VisionFile, VisionSettings } from '@/types/app'
 import Button from '@/app/components/base/button'
 import { DEFAULT_VALUE_MAX_LEN } from '@/config'
 import TextGenerationImageUploader from '@/app/components/base/image-uploader/text-generation-image-uploader'
+import WorkflowFileInput from '@/app/components/base/workflow-file-input'
 
 export type IRunOnceProps = {
+  workflowSlug: string
   promptConfig: PromptConfig
   inputs: Record<string, any>
   onInputsChange: (inputs: Record<string, any>) => void
@@ -25,6 +27,7 @@ const RunOnce: FC<IRunOnceProps> = ({
   onSend,
   visionConfig,
   onVisionFilesChange,
+  workflowSlug,
 }) => {
   const { t } = useTranslation()
 
@@ -42,8 +45,8 @@ const RunOnce: FC<IRunOnceProps> = ({
         {/* input form */}
         <form>
           {promptConfig.prompt_variables.map(item => (
-            <div className='w-full mt-4' key={item.key}>
-              <label className='text-gray-900 text-sm font-medium'>{item.name}</label>
+            <div className='w-full mt-5' key={item.key}>
+              <label className='text-gray-900 text-sm font-medium'>{item.name}{item.required === false && <span className="ml-1 text-xs font-normal text-gray-400">可选</span>}</label>
               <div className='mt-2'>
                 {item.type === 'select' && (
                   <Select
@@ -58,31 +61,41 @@ const RunOnce: FC<IRunOnceProps> = ({
                 {item.type === 'string' && (
                   <input
                     type="text"
-                    className="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 sm:text-xs focus:ring-blue-500 focus:border-blue-500 "
-                    placeholder={`${item.name}${!item.required ? `(${t('appDebug.variableTable.optional')})` : ''}`}
-                    value={inputs[item.key]}
+                    className="block h-11 w-full rounded-xl border border-black/10 bg-gray-50 px-3.5 text-sm text-gray-900 outline-none transition focus:border-[#17191e] focus:bg-white focus:ring-4 focus:ring-black/[0.04]"
+                    placeholder={item.placeholder || `请输入${item.name}`}
+                    value={inputs[item.key] ?? ''}
                     onChange={(e) => { onInputsChange({ ...inputs, [item.key]: e.target.value }) }}
                     maxLength={item.max_length || DEFAULT_VALUE_MAX_LEN}
                   />
                 )}
                 {item.type === 'paragraph' && (
                   <textarea
-                    className="block w-full h-[104px] p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 sm:text-xs focus:ring-blue-500 focus:border-blue-500 "
-                    placeholder={`${item.name}${!item.required ? `(${t('appDebug.variableTable.optional')})` : ''}`}
-                    value={inputs[item.key]}
+                    className="block w-full h-[150px] resize-y rounded-xl border border-black/10 bg-gray-50 p-3.5 text-sm leading-6 text-gray-900 outline-none transition focus:border-[#17191e] focus:bg-white focus:ring-4 focus:ring-black/[0.04]"
+                    placeholder={item.placeholder || `请输入${item.name}`}
+                    value={inputs[item.key] ?? ''}
                     onChange={(e) => { onInputsChange({ ...inputs, [item.key]: e.target.value }) }}
                   />
                 )}
                 {item.type === 'number' && (
                   <input
                     type="number"
-                    className="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 sm:text-xs focus:ring-blue-500 focus:border-blue-500 "
-                    placeholder={`${item.name}${!item.required ? `(${t('appDebug.variableTable.optional')})` : ''}`}
-                    value={inputs[item.key]}
+                    className="block h-11 w-full rounded-xl border border-black/10 bg-gray-50 px-3.5 text-sm text-gray-900 outline-none transition focus:border-[#17191e] focus:bg-white focus:ring-4 focus:ring-black/[0.04]"
+                    placeholder={item.placeholder || `请输入${item.name}`}
+                    value={inputs[item.key] ?? ''}
                     onChange={(e) => { onInputsChange({ ...inputs, [item.key]: e.target.value }) }}
                   />
                 )}
+                {(item.type === 'file' || item.type === 'file-list') && (
+                  <WorkflowFileInput
+                    workflowSlug={workflowSlug}
+                    multiple={item.type === 'file-list'}
+                    maxFiles={item.maxFiles}
+                    value={inputs[item.key]}
+                    onChange={value => onInputsChange({ ...inputs, [item.key]: value })}
+                  />
+                )}
               </div>
+              {item.hint && <div className="mt-1.5 text-xs text-gray-400">{item.hint}</div>}
             </div>
           ))}
           {
@@ -91,6 +104,7 @@ const RunOnce: FC<IRunOnceProps> = ({
                 <div className="text-gray-900 text-sm font-medium">{t('common.imageUploader.imageUpload')}</div>
                 <div className='mt-2'>
                   <TextGenerationImageUploader
+                    workflowSlug={workflowSlug}
                     settings={visionConfig}
                     onFilesChange={files => onVisionFilesChange(files.filter(file => file.progress !== -1).map(fileItem => ({
                       type: 'image',
@@ -106,10 +120,10 @@ const RunOnce: FC<IRunOnceProps> = ({
           {promptConfig.prompt_variables.length > 0 && (
             <div className='mt-4 h-[1px] bg-gray-100'></div>
           )}
-          <div className='w-full mt-4'>
+          <div className='w-full mt-5'>
             <div className="flex items-center justify-between">
               <Button
-                className='!h-8 !p-3'
+                className='!h-10 !rounded-xl !px-4'
                 onClick={onClear}
                 disabled={false}
               >
@@ -117,7 +131,7 @@ const RunOnce: FC<IRunOnceProps> = ({
               </Button>
               <Button
                 type="primary"
-                className='!h-8 !pl-3 !pr-4'
+                className='!h-10 !rounded-xl !pl-4 !pr-5'
                 onClick={onSend}
                 disabled={false}
               >

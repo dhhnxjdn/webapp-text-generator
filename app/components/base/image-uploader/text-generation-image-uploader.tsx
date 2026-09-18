@@ -67,12 +67,14 @@ const PasteImageLinkButton: FC<PasteImageLinkButtonProps> = ({
 }
 
 type TextGenerationImageUploaderProps = {
+  workflowSlug: string
   settings: VisionSettings
   onFilesChange: (files: ImageFile[]) => void
 }
 const TextGenerationImageUploader: FC<TextGenerationImageUploaderProps> = ({
   settings,
   onFilesChange,
+  workflowSlug,
 }) => {
   const { t } = useTranslation()
 
@@ -83,7 +85,7 @@ const TextGenerationImageUploader: FC<TextGenerationImageUploaderProps> = ({
     onImageLinkLoadError,
     onImageLinkLoadSuccess,
     onReUpload,
-  } = useImageFiles()
+  } = useImageFiles(`w/${workflowSlug}/file-upload`)
 
   useEffect(() => {
     onFilesChange(files)
@@ -91,6 +93,7 @@ const TextGenerationImageUploader: FC<TextGenerationImageUploaderProps> = ({
 
   const localUpload = (
     <Uploader
+      endpoint={`w/${workflowSlug}/file-upload`}
       onUpload={onUpload}
       disabled={files.length >= settings.number_limits}
       limit={+settings.image_file_size_limit!}

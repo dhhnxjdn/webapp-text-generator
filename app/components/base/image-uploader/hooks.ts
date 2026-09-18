@@ -4,7 +4,7 @@ import { imageUpload } from './utils'
 import Toast from '@/app/components/base/toast'
 import type { ImageFile } from '@/types/app'
 
-export const useImageFiles = () => {
+export const useImageFiles = (endpoint?: string) => {
   const { t } = useTranslation()
   const { notify } = Toast
   const [files, setFiles] = useState<ImageFile[]>([])
@@ -66,6 +66,7 @@ export const useImageFiles = () => {
     if (index > -1) {
       const currentImageFile = files[index]
       imageUpload({
+        endpoint,
         file: currentImageFile.file!,
         onProgressCallback: (progress) => {
           const newFiles = [...files.slice(0, index), { ...currentImageFile, progress }, ...files.slice(index + 1)]

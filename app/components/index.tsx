@@ -3,7 +3,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import cn from 'classnames'
 import { useBoolean, useClickAway } from 'ahooks'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import Link from 'next/link'
 import RunOnce from './run-once'
 import RunBatch from './run-batch'
 import ResDownload from './run-batch/res-download'
@@ -20,8 +21,10 @@ import { Resolution, TransferMethod } from '@/types/app'
 import { changeLanguage } from '@/i18n/i18next-config'
 import Loading from '@/app/components/base/loading'
 import AppUnavailable from '@/app/components/app-unavailable'
-import { API_KEY, APP_ID, APP_INFO, DEFAULT_VALUE_MAX_LEN, IS_WORKFLOW } from '@/config'
+import { DEFAULT_VALUE_MAX_LEN } from '@/config'
 import { userInputsFormToPromptVariables } from '@/utils/prompt'
+import type { PublicWorkflow } from '@/types/workflow'
+import WorkflowIcon from '@/app/components/platform/workflow-icon'
 
 const GROUP_SIZE = 5 // to avoid RPM(Request per minute) limit. The group task finished then the next group.
 enum TaskStatus {
@@ -41,7 +44,7 @@ type Task = {
   params: TaskParam
 }
 
-const TextGeneration = () => {
+const TextGeneration = ({ workflow }: { workflow: PublicWorkflow }) => {
   const { t } = useTranslation()
 
   const media = useBreakpoints()
@@ -57,7 +60,6 @@ const TextGeneration = () => {
   /*
   * app info
   */
-  const hasSetAppConfig = APP_ID && API_KEY
   const [appUnavailable, setAppUnavailable] = useState<boolean>(false)
   const [isUnknwonReason, setIsUnknwonReason] = useState<boolean>(false)
 
@@ -73,7 +75,7 @@ const TextGeneration = () => {
   })
 
   const handleFeedback = async (feedback: Feedbacktype) => {
-    await updateFeedback({ url: `/messages/${messageId}/feedbacks`, body: { rating: feedback.rating } })
+    await updateFeedback({ slug: workflow.slug, url: `/messages/${messageId}/feedbacks`, body: { rating: feedback.rating } })
     setFeedback(feedback)
   }
 
@@ -338,21 +340,18 @@ const TextGeneration = () => {
   }
 
   useEffect(() => {
-    if (!hasSetAppConfig) {
-      setAppUnavailable(true)
-      return
-    }
     (async () => {
       try {
-        changeLanguage(APP_INFO.default_language)
+        changeLanguage('zh-Hans')
 
-        const { user_input_form, file_upload, system_parameters }: any = await fetchAppParams()
+        const { user_input_form, file_upload, system_parameters }: any = await fetchAppParams(workflow.slug)
         const prompt_variables = userInputsFormToPromptVariables(user_input_form)
 
         setPromptConfig({
           prompt_template: '',
           prompt_variables,
         } as PromptConfig)
+        setInputs(Object.fromEntries(prompt_variables.map(item => [item.key, item.default ?? ''])))
         setVisionConfig({
           ...file_upload?.image,
           image_file_size_limit: system_parameters?.image_file_size_limit || 0,
@@ -368,12 +367,11 @@ const TextGeneration = () => {
         }
       }
     })()
-  }, [])
+  }, [workflow.slug])
 
   useEffect(() => {
-    if (APP_INFO?.title)
-      document.title = APP_INFO.title
-  }, [APP_INFO?.title])
+    document.title = `${workflow.name} · 大鲤传媒`
+  }, [workflow.name])
 
   const [isShowResSidebar, { setTrue: showResSidebar, setFalse: hideResSidebar }] = useBoolean(false)
   const resRef = useRef<HTMLDivElement>(null)
@@ -383,7 +381,9 @@ const TextGeneration = () => {
 
   const renderRes = (task?: Task) => (
     <Result
-      isWorkflow={IS_WORKFLOW}
+      isWorkflow={workflow.type === 'workflow'}
+      workflowSlug={workflow.slug}
+      resultMode={workflow.resultMode}
       isCallBatchAPI={isCallBatchAPI}
       isPC={isPC}
       isMobile={isMobile}
@@ -464,21 +464,39 @@ const TextGeneration = () => {
   )
 
   if (appUnavailable)
-    return <AppUnavailable isUnknwonReason={isUnknwonReason} errMessage={!hasSetAppConfig ? 'Please set APP_ID and API_KEY in config/index.tsx' : ''} />
+    return <AppUnavailable isUnknwonReason={isUnknwonReason} errMessage="该工作流暂时不可用，请联系管理员检查配置。" />
 
-  if (!APP_INFO || !promptConfig)
+  if (!promptConfig)
     return <Loading type='app' />
 
   return (
-    <>
-      <div className={cn(isPC && 'flex', 'h-screen bg-gray-50')}>
+    <div className="flex h-screen min-h-[620px] flex-col bg-[#f6f7f9]">
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-black/[0.06] bg-white px-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link href="/" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-black/[0.08] text-gray-600 transition hover:bg-gray-50" aria-label="返回工作流广场">
+            <ArrowLeftIcon className="h-4 w-4" />
+          </Link>
+          <div className="hidden items-center gap-3 sm:flex">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#17191e] text-sm text-white">鲤</div>
+            <div className="text-sm font-semibold tracking-[0.08em]">大鲤传媒</div>
+          </div>
+          <div className="hidden h-5 w-px bg-black/10 sm:block" />
+          <div className="truncate text-sm font-medium text-gray-700">{workflow.name}</div>
+        </div>
+        <div className="rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-medium text-emerald-700">已连接工作流</div>
+      </header>
+
+      <div className={cn(isPC && 'flex', 'mx-auto min-h-0 w-full max-w-[1500px] grow gap-4 p-3 sm:p-4')}>
         {/* Left */}
-        <div className={cn(isPC ? 'w-[600px] max-w-[50%] p-8' : 'p-4', 'shrink-0 relative flex flex-col pb-10 h-full border-r border-gray-100 bg-white')}>
+        <div className={cn(isPC ? 'w-[560px] max-w-[46%] p-7' : 'p-5', 'relative flex h-full shrink-0 flex-col overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-[0_1px_3px_rgba(16,24,40,0.04)]')}>
           <div className='mb-6'>
             <div className='flex justify-between items-center'>
               <div className='flex items-center space-x-3'>
-                <div className={cn(s.appIcon, 'shrink-0')}></div>
-                <div className='text-lg text-gray-800 font-semibold'>{APP_INFO.title}</div>
+                <WorkflowIcon name={workflow.icon} />
+                <div>
+                  <div className='text-lg text-gray-900 font-semibold'>{workflow.name}</div>
+                  <div className="mt-0.5 text-[11px] text-gray-400">由大鲤传媒提供</div>
+                </div>
               </div>
               {!isPC && (
                 <Button
@@ -492,8 +510,8 @@ const TextGeneration = () => {
                 </Button>
               )}
             </div>
-            {APP_INFO.description && (
-              <div className='mt-2 text-xs text-gray-500'>{APP_INFO.description}</div>
+            {workflow.description && (
+              <div className='mt-4 text-sm leading-6 text-gray-500'>{workflow.description}</div>
             )}
           </div>
 
@@ -506,9 +524,10 @@ const TextGeneration = () => {
             onChange={setCurrTab}
           />
 
-          <div className='grow h-20 overflow-y-auto'>
+          <div className='grow h-20 overflow-y-auto pr-1'>
             <div className={cn(currTab === 'create' ? 'block' : 'hidden')}>
               <RunOnce
+                workflowSlug={workflow.slug}
                 inputs={inputs}
                 onInputsChange={setInputs}
                 promptConfig={promptConfig}
@@ -527,26 +546,15 @@ const TextGeneration = () => {
           </div>
 
           {/* copyright */}
-          <div className='fixed left-8 bottom-4  flex space-x-2 text-gray-400 font-normal text-xs'>
-            <div className="">© {APP_INFO.copyright || APP_INFO.title} {(new Date()).getFullYear()}</div>
-            {APP_INFO.privacy_policy && (
-              <>
-                <div>·</div>
-                <div>{t('app.generation.privacyPolicyLeft')}
-                  <a
-                    className='text-gray-500'
-                    href={APP_INFO.privacy_policy}
-                    target='_blank'>{t('app.generation.privacyPolicyMiddle')}</a>
-                  {t('app.generation.privacyPolicyRight')}
-                </div>
-              </>
-            )}
+          <div className='mt-4 flex shrink-0 items-center justify-between border-t border-gray-100 pt-4 text-[11px] text-gray-400'>
+            <div>© 大鲤传媒 {new Date().getFullYear()}</div>
+            <div>内容仅供参考</div>
           </div>
         </div>
 
         {/* Result */}
         {isPC && (
-          <div className='grow h-full'>
+          <div className='grow h-full overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-[0_1px_3px_rgba(16,24,40,0.04)]'>
             {renderResWrap}
           </div>
         )}
@@ -555,14 +563,14 @@ const TextGeneration = () => {
           <div
             className={cn('fixed z-50 inset-0', isTablet ? 'pl-[128px]' : 'pl-6')}
             style={{
-              background: 'rgba(35, 56, 118, 0.2)',
+              background: 'rgba(17, 19, 24, 0.35)',
             }}
           >
             {renderResWrap}
           </div>
         )}
       </div>
-    </>
+    </div>
   )
 }
 
