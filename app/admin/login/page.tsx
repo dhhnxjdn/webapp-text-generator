@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRightIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 
 const AdminLogin = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const inputRef = useRef<HTMLInputElement>(null)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -18,7 +19,7 @@ const AdminLogin = () => {
     const response = await fetch('/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ password: value }),
     })
     const data = await response.json().catch(() => ({}))
     setLoading(false)
@@ -61,7 +62,7 @@ const AdminLogin = () => {
             />
           </div>
           {error && <div className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{error}</div>}
-          <button disabled={loading || !password} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#17191e] text-sm font-medium text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50">
+          <button disabled={loading} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#17191e] text-sm font-medium text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50">
             {loading ? '正在验证…' : '登录管理后台'}
             {!loading && <ArrowRightIcon className="h-4 w-4" />}
           </button>
